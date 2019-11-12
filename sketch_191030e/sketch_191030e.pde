@@ -1,4 +1,5 @@
 //GitHub対応
+//2
 import de.bezier.data.*;
 XlsReader reader;
 int menu_count;//Xlsファイルの料理の数
