@@ -1,9 +1,11 @@
-//GitHub対応
-//2
+import controlP5.*;
 import de.bezier.data.*;
+ControlP5 cp5;
+Accordion accordion;
 XlsReader reader;
 int menu_count;//Xlsファイルの料理の数
-Food [] foods = new Food [21]; //ここの数だけはexcelファイルの中身変えたときにチェックする
+Food [] foods = new Food [30]; //ここの数だけはexcelファイルの中身変えたときにチェックする
+Line line;
 int guru = 0;
 int number = 0; //検索する料理の番号
 float dataMin = MAX_FLOAT;
@@ -26,19 +28,27 @@ float [] BRed;
 float [] Blue;
 float [] Red2;
 float [] Blue2;
-float [][] CulcResult;
+float [][] CulcResult; //食べ物同士の関連度の計算結果を保存
+color [][] PercentResultC; //percentに応じて線の色を変化
+float [][] PercentResultW; //percentに応じて線の太さを変化
 ArrayList <PVector> circles;
+int gamenX = 1000;
+int startX = gamenX - 800 + 25;
+int mannaka = gamenX - 400;
+int cursor;
 
 void setup() {
-  size(800, 800);
+  size(1000, 800);
+  gui();
   background(255);
   PFont font = createFont("PFont", 10, true);
   textFont(font);
 
-  reader = new XlsReader( this, "recipe3.xls" ); //ファイル名を指定して読み込む（Excelシートはdataフォルダの中に入れる）
+  reader = new XlsReader( this, "recipe4.xls" ); //ファイル名を指定して読み込む（Excelシートはdataフォルダの中に入れる）
   reader.firstRow(); //最初の行に移動する（データが入っていない行は無視する）そして最初のセルを選ぶ
   menu_count = reader.getInt(); //データを読み込む
 
+  line = new Line();
   coordinate = new float[menu_count][2];
   Bcoordinate = new float[menu_count][2];
   diameter = new float[menu_count];
@@ -58,6 +68,8 @@ void setup() {
   Blue = new float[menu_count];
   Blue2 = new float[menu_count];
   CulcResult = new float[menu_count][menu_count];
+  PercentResultC = new color[menu_count][menu_count];
+  PercentResultW = new float[menu_count][menu_count];
 
   for (int i=0; i<menu_count; i++) {
     foods[i] = new Food();
@@ -106,15 +118,18 @@ void setup() {
 
   for (int i=0; i<menu_count; i++) {
     foods[i].photo = loadImage(foods[i].photo_url);
+    //println(foods[i].photo);
   }
   
   culcResults();
   count(0);
   diameter_start();
+  percentResults();
   randomCircle();
   move_setting();
-  for (int i=0; i<800; i++) {
+  for (int i=0; i<1200; i++) {
     move();
+    Line_colorchange();
   }
   addCircle();
 }
@@ -123,8 +138,10 @@ void draw() {
   background(255);
   move();
   addLine();
+  cursor = 100; //これここじゃないとダメ
   addCircle();
   colorchange();
+  Line_colorchange();
 }
 
 void mousePressed() {
@@ -154,6 +171,10 @@ void mousePressed() {
       dataMax = MIN_FLOAT;
       count(number);
       diameter();
+      line.L11 = 0;
+      line.L10 = 0;
+      line.L9 = 0;
+      percentResults();
       randomCircle();
       move_setting();
       //処理終わり
@@ -206,7 +227,6 @@ void colorchange() {
       }
       if (Blue[i] < 253) {
         Blue[i] += 2.5;
-        println(Blue[i]);
       }
     } else if (BRed[i] == 0 && Red2[i] == 255) {
       if (Red[i] < 253) {
@@ -217,4 +237,52 @@ void colorchange() {
       }
     }
   }
+}
+
+void Line_colorchange(){
+  if (line.L11 <= 110){
+    line.L11 += 1.1;
+  }
+  if (line.L10 <= 100){
+    line.L10 += 1.0;
+  }
+  if (line.L9 <= 90){
+    line.L9 += 0.9;
+  }
+}
+
+void gui(){
+  cp5 = new ControlP5(this);
+  
+  Group g3 = cp5.addGroup("Controller")
+    .setBackgroundColor(color(0,64))
+    .setBackgroundHeight(200);
+    
+  cp5.addSlider("alpha")
+    .setPosition(20, 10)
+    .setSize(140, 40)
+    .setRange(5, 30)
+    .setValue(10)
+    .moveTo(g3)
+    ;
+    
+  cp5.addSlider("beta")
+    .setPosition(20, 70)
+    .setSize(140, 40)
+    .setRange(5, 30)
+    .setValue(20)
+    .moveTo(g3)
+    ;
+    
+  cp5.addSlider("gammma")
+    .setPosition(20, 130)
+    .setSize(140, 40)
+    .setRange(1, 10)
+    .setValue(8)
+    .moveTo(g3)
+    ;
+
+  accordion = cp5.addAccordion("acc").setPosition(10, 20).setWidth(200).addItem(g3);
+  accordion.open(0, 1, 2);
+  accordion.setCollapseMode(Accordion.MULTI);
 }

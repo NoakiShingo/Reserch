@@ -12,3 +12,9 @@ class Food {
     hit_count = 0;
   }
 }
+
+class Line {
+  float L11;
+  float L10;
+  float L9;
+}
